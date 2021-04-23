@@ -1,0 +1,86 @@
+module datapath (input						Clk, Reset, Run, LD_MAR, LD_MDR, LD_IR, LD_BEN, LD_CC, LD_REG, LD_PC, LD_LED,
+					  input						GatePC, GateMDR, GateALU, GateMARMUX, SR2MUX, ADDR1MUX, MARMUX, BEN, MIO_EN, DRMUX, SR1MUX,
+					  input 						[1:0] PCMUX, ADDR2MUX, ALUK,
+					  input 						[15:0] MDR_In, MAR_IN,
+					  //input 						[9:0] SW,
+					  output logic 			[15:0] MDR, MAR, IR, ProgramCnt
+);
+		
+	//internal
+	logic [15:0] PC, PC_Next, MAR_Next, MDR_Next, IR_Next, ALU, MARMUX_Out, BUS16;
+	assign ProgramCnt = PC;
+		always_ff @ (posedge Clk)
+			begin
+				MAR <= MAR_Next;
+				MDR <= MDR_Next;
+				IR <= IR_Next;
+				if (Reset)
+					PC <= 4'h0000;
+				else 
+					PC <= PC_Next;
+			end
+			
+		always_comb 
+			begin
+				//GATE->BUS
+				unique case ({GatePC, GateMDR, GateALU, GateMARMUX})
+					4'b1000:
+						BUS16 = PC;
+					4'b0100:
+						BUS16 = MDR;
+					4'b0010:
+						BUS16 = ALU;
+					4'b0001:
+						BUS16 = MARMUX_Out;
+					default:
+						BUS16 = 4'h0000;
+				endcase
+					
+				//PCMUX
+				if (LD_PC)
+				begin
+					unique case (PCMUX)
+						2'b00:
+							PC_Next = PC+1;
+						2'b01:
+							PC_Next = PC; //change week2
+						2'b10:
+							PC_Next = PC; //change week2
+						2'b11:
+							PC_Next = PC; //change week2
+						default:
+							PC_Next = PC;
+					endcase
+				end
+				else
+					PC_Next = PC;
+					
+					
+				//MAR
+				if (LD_MAR)
+					MAR_Next = BUS16;
+				else 
+					MAR_Next = MAR;
+				
+				//MDR
+				if (LD_MDR)
+					begin
+						if (MIO_EN)
+							MDR_Next = MDR_In;
+						else
+							MDR_Next = BUS16;
+					end
+				else 
+					MDR_Next = MDR;
+				
+				//IR
+				if (LD_IR)
+					IR_Next = BUS16;
+				else 
+					IR_Next = IR;
+				
+			end
+			
+		
+endmodule
+

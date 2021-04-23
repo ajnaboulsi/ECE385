@@ -127,7 +127,7 @@ void printSignedHex1(signed char value) {
 
 void setKeycode(WORD keycode)
 {
-	IOWR_ALTERA_AVALON_PIO_DATA(KEYCODE_BASE, keycode);
+	IOWR_ALTERA_AVALON_PIO_DATA(0x8002000, keycode);
 }
 int main() {
 	BYTE rcode;
@@ -146,7 +146,6 @@ int main() {
 	while (1) {
 		printf(".");
 		MAX3421E_Task();
-		usleep(1000);
 		USB_Task();
 		//usleep (500000);
 		if (GetUsbTaskState() == USB_STATE_RUNNING) {
